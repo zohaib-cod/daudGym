@@ -3,7 +3,6 @@
 import React, { useState, useRef } from "react";
 import {
   User,
-  UserCheck,
   Phone,
   CreditCard,
   MapPin,
@@ -31,7 +30,6 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [storageNotice, setStorageNotice] = useState("");
   const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
@@ -73,7 +71,6 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
-    setStorageNotice("");
 
     if (!formData.name.trim()) {
       setErrorMsg("Please enter Member Name");
@@ -103,34 +100,43 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
     setLoading(true);
 
     try {
-      const data = await registerMember({
-        ...formData,
+      const payload = {
+        name: formData.name.trim(),
+        fatherName: formData.fatherName.trim(),
+        contact: formData.contact.trim(),
+        idCardNo: formData.idCardNo.trim(),
+        address: formData.address.trim(),
         picture: picturePreview,
-      });
+      };
 
-      setSuccessMsg("Member successfully registered!");
-      if (data.warning) {
-        setStorageNotice(data.warning);
-      }
+      const response = await registerMember(payload);
 
-      // Reset form
-      setFormData({
-        name: "",
-        fatherName: "",
-        contact: "",
-        idCardNo: "",
-        address: "",
-      });
-      setPicturePreview(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (response && response.success) {
+        setSuccessMsg("Member successfully registered! Generating pass...");
+        
+        // Reset form inputs
+        setFormData({
+          name: "",
+          fatherName: "",
+          contact: "",
+          idCardNo: "",
+          address: "",
+        });
+        setPicturePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
 
-      if (onRegistrationSuccess && data.member) {
-        onRegistrationSuccess(data.member);
+        if (onRegistrationSuccess && response.member) {
+          setTimeout(() => {
+            onRegistrationSuccess(response.member);
+          }, 400);
+        }
+      } else {
+        throw new Error(response.error || "Failed to register member");
       }
     } catch (err) {
-      console.error("Registration error:", err);
+      console.error("Submission failed:", err);
       setErrorMsg(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -138,44 +144,49 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl p-6 sm:p-8 backdrop-blur-sm">
+    <div className="max-w-3xl w-full mx-auto">
+      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl p-4 sm:p-7 lg:p-8 backdrop-blur-sm">
         
         {/* Form Title & Owners Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-800 gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-5 sm:pb-6 border-b border-slate-800 gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Official Admission Portal</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white uppercase">
               Gym Membership Form
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
               Enter applicant credentials for official enrollment and membership card issuance.
             </p>
           </div>
 
-          <div className="flex sm:flex-col items-start sm:items-end justify-between text-xs text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+          {/* Verified Management Box - Resilient on mobile */}
+          <div className="w-full sm:w-auto flex flex-col items-start sm:items-end justify-center text-xs bg-slate-950/70 p-3 rounded-xl border border-slate-800/80 flex-shrink-0">
             <span className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" /> Verified Management
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span>Verified Management</span>
             </span>
-            <span className="text-slate-300 font-medium">Saqib Mehmood</span>
-            <span className="text-slate-300 font-medium">Ali Daud</span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-slate-300 font-medium text-xs">
+              <span>Saqib Mehmood</span>
+              <span className="text-slate-600">•</span>
+              <span>Ali Daud</span>
+            </div>
           </div>
         </div>
 
         {/* Notifications */}
         {errorMsg && (
-          <div className="mt-6 flex items-start gap-3 p-4 bg-red-950/40 border border-red-800/60 rounded-xl text-red-200 text-sm animate-in fade-in">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
+          <div className="mt-4 sm:mt-6 flex items-start gap-3 p-3.5 sm:p-4 bg-red-950/40 border border-red-800/60 rounded-xl text-red-200 text-xs sm:text-sm animate-in fade-in">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-red-300">Registration Error</p>
-              <p className="text-red-300/90 text-xs mt-0.5">{errorMsg}</p>
+              <p className="text-red-300/90 text-xs mt-0.5 break-words">{errorMsg}</p>
             </div>
             <button
               onClick={() => setErrorMsg("")}
-              className="text-red-400 hover:text-red-200"
+              className="text-red-400 hover:text-red-200 flex-shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
@@ -183,20 +194,15 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
         )}
 
         {successMsg && (
-          <div className="mt-6 flex items-start gap-3 p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-emerald-200 text-sm animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
+          <div className="mt-4 sm:mt-6 flex items-start gap-3 p-3.5 sm:p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-emerald-200 text-xs sm:text-sm animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-emerald-300">Success</p>
-              <p className="text-emerald-300/90 text-xs mt-0.5">{successMsg}</p>
-              {storageNotice && (
-                <p className="text-[11px] text-amber-300/80 mt-1 bg-amber-950/30 p-2 rounded border border-amber-900/40">
-                  {storageNotice}
-                </p>
-              )}
+              <p className="text-emerald-300/90 text-xs mt-0.5 break-words">{successMsg}</p>
             </div>
             <button
               onClick={() => setSuccessMsg("")}
-              className="text-emerald-400 hover:text-emerald-200"
+              className="text-emerald-400 hover:text-emerald-200 flex-shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
@@ -204,7 +210,7 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
         )}
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-6 sm:mt-8 space-y-5 sm:space-y-6">
           
           {/* Picture Upload Area */}
           <div>
@@ -212,8 +218,8 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
               Member Picture <span className="text-amber-400">*</span>
             </label>
 
-            <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 hover:border-slate-600 transition-colors">
-              <div className="relative w-32 h-36 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 flex-shrink-0 flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 hover:border-slate-600 transition-colors">
+              <div className="relative w-28 h-32 sm:w-32 sm:h-36 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 flex-shrink-0 flex items-center justify-center">
                 {picturePreview ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -239,7 +245,7 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
                 )}
               </div>
 
-              <div className="flex-1 text-center sm:text-left space-y-2">
+              <div className="flex-1 w-full text-center sm:text-left space-y-1.5">
                 <p className="text-sm font-medium text-slate-200">
                   Upload applicant portrait or photo
                 </p>
@@ -279,7 +285,7 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
           </div>
 
           {/* Grid: Name & Father Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             <div>
               <label
                 htmlFor="name"
@@ -313,7 +319,7 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <UserCheck className="w-4 h-4" />
+                  <User className="w-4 h-4" />
                 </div>
                 <input
                   type="text"
@@ -329,8 +335,8 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
             </div>
           </div>
 
-          {/* Grid: Contact & Id card No */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Grid: Contact & CNIC */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             <div>
               <label
                 htmlFor="contact"
@@ -343,13 +349,13 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
                   <Phone className="w-4 h-4" />
                 </div>
                 <input
-                  type="text"
+                  type="tel"
                   id="contact"
                   name="contact"
                   value={formData.contact}
                   onChange={handleChange}
                   placeholder="e.g. 0300-1234567"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all font-mono"
                   required
                 />
               </div>
@@ -406,11 +412,11 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
           </div>
 
           {/* Submit Action */}
-          <div className="pt-3">
+          <div className="pt-2 sm:pt-3">
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
+              className={`w-full py-3.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm tracking-wide sm:tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
                 loading
                   ? "bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-700"
                   : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 active:scale-[0.99]"
@@ -419,17 +425,17 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                  <span>Registering Member & Uploading to Cloudinary...</span>
+                  <span>Registering Member &amp; Uploading Photo...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Submit Registration & Generate Pass</span>
+                  <span>Submit Registration &amp; Generate Pass</span>
                 </>
               )}
             </button>
-            <p className="text-center text-xs text-slate-500 mt-3">
-              Official registration for FG & S.M Fitness Gym • Supervised by Saqib Mehmood & Ali Daud
+            <p className="text-center text-[11px] sm:text-xs text-slate-500 mt-2.5 sm:mt-3">
+              Official registration for FG &amp; S.M Fitness Gym • Supervised by Saqib Mehmood &amp; Ali Daud
             </p>
           </div>
 
