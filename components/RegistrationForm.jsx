@@ -131,7 +131,7 @@ export default function RegistrationForm({ onRegistrationSuccess }) {
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setErrorMsg(err.message || "An unexpected error occurred. Please check backend connection.");
+      setErrorMsg(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

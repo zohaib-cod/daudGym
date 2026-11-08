@@ -154,7 +154,7 @@ export default function AdminLogin({ onLoginSuccess }) {
               <span>Back to Admission Desk</span>
             </Link>
 
-            <span className="text-slate-600 font-mono text-[11px]">v1.0 • Live API</span>
+            <span className="text-slate-600 font-mono text-[11px]">FG & S.M Portal v1.0</span>
           </div>
 
         </div>
@@ -163,3 +163,4 @@ export default function AdminLogin({ onLoginSuccess }) {
     </div>
   );
 }
+

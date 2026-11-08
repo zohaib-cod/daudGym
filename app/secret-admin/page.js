@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import AdminLogin from "@/components/AdminLogin";
 import AdminPanel from "@/components/AdminPanel";
 import MembershipCard from "@/components/MembershipCard";
-import { Dumbbell, Shield, CheckCircle } from "lucide-react";
+import { Dumbbell, Shield } from "lucide-react";
 import { fetchStats } from "@/lib/api";
 import { getAdminSession, clearAdminSession } from "@/lib/auth";
 import { useRouter } from "next/navigation";
@@ -117,17 +117,9 @@ export default function SecretAdminPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-slate-400 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
-            <div>
-              <p className="text-[10px] uppercase font-semibold text-slate-500">Owners & Directors</p>
-              <p className="text-slate-200 font-medium">Saqib Mehmood • Ali Daud</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] uppercase font-semibold text-slate-500">API Connection</p>
-              <p className="text-emerald-400 font-medium flex items-center gap-1 justify-end">
-                <CheckCircle className="w-3 h-3 text-emerald-400" /> Backend Live
-              </p>
-            </div>
+          <div className="text-xs text-slate-400 self-stretch md:self-auto border-t md:border-t-0 border-slate-800 pt-3 md:pt-0 text-left md:text-right">
+            <p className="text-[10px] uppercase font-semibold text-slate-500">Owners & Directors</p>
+            <p className="text-slate-200 font-medium">Saqib Mehmood • Ali Daud</p>
           </div>
         </div>
 
@@ -162,3 +154,4 @@ export default function SecretAdminPage() {
     </div>
   );
 }
+
